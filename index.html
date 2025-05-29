@@ -31,21 +31,21 @@
       <button onclick="switchTab('stats')" class="tab-button px-4 py-2 rounded-lg bg-white shadow">สถิติ</button>
     </div>
 
-    <div id="form" class="tab-content">
-      <div class="bg-white p-6 rounded shadow">
-        <h2 class="text-xl font-semibold mb-4">บันทึกงวดงาน</h2>
-        <form id="recordForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input type="number" placeholder="งวดที่" id="period" required class="border p-2 rounded">
-          <input type="date" placeholder="วันที่ครบงวด" id="dueDate" required class="border p-2 rounded">
-          <input type="date" placeholder="วันที่ส่งงานจริง" id="submitDate" required class="border p-2 rounded">
-          <input type="number" placeholder="จำนวนวันล่าช้า" id="delayDays" required class="border p-2 rounded" oninput="autoCalculateFine()">
-          <input type="number" placeholder="ค่าปรับ (บาท)" id="fine" step="0.01" required class="border p-2 rounded">
-          <input type="number" placeholder="ปริมาณขยะ (ตัน)" id="waste" step="0.01" required class="border p-2 rounded">
-          <input type="text" placeholder="หมายเหตุเพิ่มเติม" id="note" class="border p-2 rounded">
-          <button type="submit" class="col-span-2 bg-red-600 text-white py-2 rounded hover:bg-red-700">บันทึก</button>
-        </form>
-      </div>
-    </div>
+   <div id="form" class="tab-content">
+  <div class="bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">บันทึกงวดงาน</h2>
+    <form id="recordForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <input type="number" placeholder="งวดที่" id="period" required class="border p-2 rounded">
+      <input type="date" placeholder="วันที่ครบงวด" id="dueDate" required class="border p-2 rounded">
+      <input type="date" placeholder="วันที่ส่งงานจริง" id="submitDate" required class="border p-2 rounded">
+      <input type="number" placeholder="จำนวนวันล่าช้า" id="delayDays" required class="border p-2 rounded" oninput="autoCalculateFine()">
+      <input type="number" placeholder="ค่าปรับ (บาท)" id="fine" step="0.01" required class="border p-2 rounded">
+      <input type="number" placeholder="ปริมาณขยะ (ตัน)" id="waste" step="0.01" required class="border p-2 rounded">
+      <input type="text" placeholder="หมายเหตุเพิ่มเติม" id="note" class="border p-2 rounded">
+      <button type="submit" class="col-span-2 bg-red-600 text-white py-2 rounded hover:bg-red-700">บันทึก</button>
+    </form>
+  </div>
+</div>
 
     <div id="stats" class="tab-content hidden">
       <div class="bg-white p-6 rounded shadow">
