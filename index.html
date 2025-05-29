@@ -10,10 +10,33 @@
   <style>
     body { font-family: 'Prompt', sans-serif; }
     .tab-button.active { background-color: #dc2626; color: white; }
+    input, select, textarea {
+      background-color: #f9f9f9;
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      border: 1px solid #e5e7eb;
+      transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+    }
+    label {
+      font-size: 0.95rem;
+      color: #374151;
+      font-weight: 500;
+    }
+    button[type="submit"] {
+      transition: background-color 0.2s;
+    }
+    button[type="submit"]:hover {
+      background-color: #b91c1c;
+    }
   </style>
 </head>
 <body class="bg-gray-100">
-  <header class="text-center py-6 bg-red-600 text-white text-2xl font-bold">ระบบติดตามโครงการขนมูลฝอย 2568-2570</header>
+  <header class="text-center py-6 bg-red-600 text-white text-2xl font-bold shadow">ระบบติดตามโครงการขนมูลฝอย 2568-2570</header>
 
   <div class="max-w-6xl mx-auto p-4">
     <div class="flex justify-center gap-4 mb-6">
@@ -23,25 +46,25 @@
 
     <!-- Tab: Form -->
     <div id="form" class="tab-content">
-      <div class="bg-white p-6 rounded shadow">
-        <h2 class="text-xl font-semibold mb-4">บันทึกงวดงาน</h2>
+      <div class="bg-white p-6 rounded-2xl shadow">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">บันทึกงวดงาน</h2>
         <form id="recordForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <label>งวดที่ <input type="number" placeholder="งวดที่" id="period" required class="border p-2 rounded w-full"></label>
-          <label>วันที่ครบงวด <input type="date" placeholder="วันที่ครบงวด" id="dueDate" required class="border p-2 rounded w-full"></label>
-          <label>วันที่ส่งงานจริง <input type="date" placeholder="วันที่ส่งงานจริง" id="submitDate" required class="border p-2 rounded w-full"></label>
-          <label>จำนวนวันล่าช้า <input type="number" placeholder="จำนวนวันล่าช้า" id="delayDays" required class="border p-2 rounded w-full" oninput="autoCalculateFine()"></label>
-          <label>ค่าปรับ (บาท) <input type="number" placeholder="ค่าปรับ (บาท)" id="fine" step="0.01" required class="border p-2 rounded w-full"></label>
-          <label>ปริมาณขยะ (ตัน) <input type="number" placeholder="ปริมาณขยะ (ตัน)" id="waste" step="0.01" required class="border p-2 rounded w-full"></label>
-          <label>หมายเหตุเพิ่มเติม <input type="text" placeholder="หมายเหตุเพิ่มเติม" id="note" class="border p-2 rounded w-full"></label>
-          <button type="submit" class="col-span-2 bg-red-600 text-white py-2 rounded hover:bg-red-700">บันทึก</button>
+          <label>งวดที่ <input type="number" placeholder="งวดที่" id="period" required class="w-full"></label>
+          <label>วันที่ครบงวด <input type="date" placeholder="วันที่ครบงวด" id="dueDate" required class="w-full"></label>
+          <label>วันที่ส่งงานจริง <input type="date" placeholder="วันที่ส่งงานจริง" id="submitDate" required class="w-full"></label>
+          <label>จำนวนวันล่าช้า <input type="number" placeholder="จำนวนวันล่าช้า" id="delayDays" required class="w-full" oninput="autoCalculateFine()"></label>
+          <label>ค่าปรับ (บาท) <input type="number" placeholder="ค่าปรับ (บาท)" id="fine" step="0.01" required class="w-full"></label>
+          <label>ปริมาณขยะ (ตัน) <input type="number" placeholder="ปริมาณขยะ (ตัน)" id="waste" step="0.01" required class="w-full"></label>
+          <label>หมายเหตุเพิ่มเติม <input type="text" placeholder="หมายเหตุเพิ่มเติม" id="note" class="w-full"></label>
+          <button type="submit" class="col-span-2 bg-red-600 text-white py-2 rounded-xl text-lg font-medium">บันทึก</button>
         </form>
       </div>
     </div>
 
     <!-- Tab: Statistics -->
     <div id="stats" class="tab-content hidden">
-      <div class="bg-white p-6 rounded shadow">
-        <h2 class="text-xl font-semibold mb-4">สถิติ</h2>
+      <div class="bg-white p-6 rounded-2xl shadow">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">สถิติ</h2>
         <canvas id="wasteChart" class="mb-6"></canvas>
         <canvas id="netPayChart" class="mb-6"></canvas>
         <canvas id="fineChart" class="mb-6"></canvas>
@@ -49,155 +72,5 @@
       </div>
     </div>
   </div>
-
-  <script>
-    const records = [];
-    const fullBudget = 256122000;
-    const pricePerTon = 1530;
-    const finePerDay = 25612.20;
-    const targetTons = 167400;
-    const endpoint = 'https://script.google.com/macros/s/AKfycbwSBBtS6QVE1aLsyKuoVFXE7SJ2xpfcWS23HEe-d_d7GnG-DctZOUDo03XAUWtMXb6E/exec';
-
-    function calculateStartDate(period) {
-      const start = new Date("2025-05-07");
-      start.setDate(start.getDate() + (period - 1) * 30);
-      return start;
-    }
-
-    function autoCalculateFine() {
-      const delayDays = parseInt(document.getElementById('delayDays').value) || 0;
-      const fine = delayDays * finePerDay;
-      document.getElementById('fine').value = fine.toFixed(2);
-    }
-
-    document.getElementById('recordForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-
-      const period = parseInt(document.getElementById('period').value);
-      const submitDate = document.getElementById('submitDate').value;
-      const dueDate = document.getElementById('dueDate').value;
-      const delayDays = parseInt(document.getElementById('delayDays').value);
-      const fine = parseFloat(document.getElementById('fine').value);
-      const waste = parseFloat(document.getElementById('waste').value);
-      const note = document.getElementById('note').value;
-
-      const startDate = calculateStartDate(period);
-      const startDateStr = startDate.toISOString().split('T')[0];
-
-      const pay = waste * pricePerTon;
-      const netPay = pay - fine;
-      const wasteTotal = (records.reduce((sum, r) => sum + r.waste, 0)) + waste;
-      const fineTotal = (records.reduce((sum, r) => sum + r.fine, 0)) + fine;
-      const remainBudget = fullBudget - ((records.reduce((sum, r) => sum + r.netPay, 0)) + netPay);
-
-      const data = {
-        period,
-        startDate: startDateStr,
-        dueDate,
-        submitDate,
-        delayDays,
-        fine,
-        waste,
-        note,
-        pay,
-        netPay,
-        wasteTotal,
-        fineTotal,
-        remainBudget
-      };
-
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        alert('บันทึกลง Google Sheet สำเร็จ');
-        document.getElementById('recordForm').reset();
-        records.push(data);
-        renderChart();
-      } else {
-        alert('เกิดข้อผิดพลาดในการบันทึก');
-      }
-    });
-
-    function switchTab(tab, evt) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(tab).classList.remove('hidden');
-      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-      if (evt) evt.target.classList.add('active');
-    }
-
-    function renderChart() {
-      const labels = records.map(r => `งวดที่ ${r.period}`);
-      const wasteData = records.map(r => r.waste);
-      const netPayData = records.map(r => r.netPay);
-      const fineData = records.map(r => r.fine);
-
-      new Chart(document.getElementById('wasteChart').getContext('2d'), {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'ปริมาณขยะ (ตัน)', data: wasteData }] },
-        options: { responsive: true }
-      });
-
-      new Chart(document.getElementById('netPayChart').getContext('2d'), {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'ค่าจ้างสุทธิ (บาท)', data: netPayData, backgroundColor: '#10b981' }] },
-        options: { responsive: true }
-      });
-
-      new Chart(document.getElementById('fineChart').getContext('2d'), {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'ค่าปรับ (บาท)', data: fineData, backgroundColor: '#ef4444' }] },
-        options: { responsive: true }
-      });
-
-      const last = records[records.length - 1];
-      const totalPay = records.reduce((sum, r) => sum + r.pay, 0);
-      const totalNet = records.reduce((sum, r) => sum + r.netPay, 0);
-
-      document.getElementById('summary').innerHTML = `
-        <p>ปริมาณขยะสะสม: <strong>${last.wasteTotal.toFixed(2)}</strong> ตัน / ${targetTons} ตัน</p>
-        <p>ค่าปรับสะสม: <strong>${last.fineTotal.toLocaleString()}</strong> บาท</p>
-        <p>ค่าจ้างรวม (ก่อนหัก): <strong>${totalPay.toLocaleString()}</strong> บาท</p>
-        <p>ค่าจ้างสุทธิรวม: <strong>${totalNet.toLocaleString()}</strong> บาท</p>
-        <p>งบประมาณคงเหลือ: <strong>${last.remainBudget.toLocaleString()}</strong> บาท</p>
-        <p>จำนวนงวดที่ส่งล่าช้า: <strong>${records.filter(r => r.delayDays > 0).length}</strong> งวด</p>
-      `;
-    }
-
-    window.addEventListener('DOMContentLoaded', loadRecords);
-
-    async function loadRecords() {
-      try {
-        const res = await fetch(`${endpoint}?action=getRecords`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const result = await res.json();
-
-        if (result.success && Array.isArray(result.data)) {
-          records.length = 0;
-          records.push(...result.data.map(r => ({
-            ...r,
-            period: parseInt(r.period),
-            waste: parseFloat(r.waste),
-            netPay: parseFloat(r.netPay),
-            fine: parseFloat(r.fine),
-            pay: parseFloat(r.pay),
-            delayDays: parseInt(r.delayDays),
-            wasteTotal: parseFloat(r.wasteTotal),
-            fineTotal: parseFloat(r.fineTotal),
-            remainBudget: parseFloat(r.remainBudget)
-          })));
-          renderChart();
-        } else {
-          console.error('โหลดข้อมูลไม่สำเร็จ: ข้อมูลไม่ถูกต้อง');
-        }
-      } catch (err) {
-        console.error('โหลดข้อมูลไม่สำเร็จ:', err.message);
-      }
-    }
-  </script>
 </body>
 </html>
