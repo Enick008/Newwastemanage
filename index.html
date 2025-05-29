@@ -229,6 +229,35 @@
                 <p>จำนวนงวดที่ส่งล่าช้า: <strong>${records.filter(r => r.delayDays > 0).length}</strong> งวด</p>
             `;
         }
+
+        window.addEventListener('DOMContentLoaded', loadRecords);
+
+async function loadRecords() {
+  try {
+    const res = await fetch(`${endpoint}?action=getRecords`);
+    const result = await res.json();
+
+    if (result.success && Array.isArray(result.data)) {
+      records.length = 0; // เคลียร์ข้อมูลเดิม
+      records.push(...result.data.map(r => ({
+        ...r,
+        period: parseInt(r.period),
+        waste: parseFloat(r.waste),
+        netPay: parseFloat(r.netPay),
+        fine: parseFloat(r.fine),
+        pay: parseFloat(r.pay),
+        delayDays: parseInt(r.delayDays),
+        wasteTotal: parseFloat(r.wasteTotal),
+        fineTotal: parseFloat(r.fineTotal),
+        remainBudget: parseFloat(r.remainBudget)
+      })));
+      renderChart();
+    }
+  } catch (err) {
+    console.error('โหลดข้อมูลไม่สำเร็จ:', err);
+  }
+}
+
     </script>
     <footer>
         <p>©2025 ระบบติดตามโครงการ กองช่างสุขาภิบาล โดย นายธีรศักดิ์ พูลเขาล้าน</p>
