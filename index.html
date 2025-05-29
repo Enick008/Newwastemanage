@@ -9,40 +9,81 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet">
   <style>
+    /* กำหนดฟอนต์หลักสำหรับ body */
     body { font-family: 'Prompt', sans-serif; }
+    /* สไตล์สำหรับปุ่มแท็บที่ถูกเลือก */
     .tab-button.active { background-color: #16a34a; color: white; }
+    /* สไตล์สำหรับ input, select, textarea */
     input, select, textarea {
       background-color: #f9f9f9;
       border-radius: 0.75rem;
       padding: 0.75rem;
       border: 1px solid #e5e7eb;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s; /* เพิ่ม transition สำหรับ box-shadow */
     }
+    /* สไตล์เมื่อ input, textarea ถูกโฟกัส */
     input:focus, textarea:focus {
       outline: none;
       border-color: #16a34a;
       box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.3);
     }
+    /* สไตล์สำหรับ label */
     label {
       font-size: 0.95rem;
       color: #374151;
       font-weight: 500;
+      display: block; /* ทำให้ label อยู่ในบรรทัดใหม่ */
+      margin-bottom: 0.25rem; /* เพิ่มระยะห่างด้านล่าง */
     }
+    /* สไตล์สำหรับปุ่ม submit */
     button[type="submit"] {
       background-color: #16a34a;
       transition: background-color 0.2s;
     }
+    /* สไตล์เมื่อปุ่ม submit ถูกโฮเวอร์ */
     button[type="submit"]:hover {
       background-color: #15803d;
     }
+    /* สไตล์สำหรับโลโก้ */
     .logo {
       height: 100px;
       width: auto;
       margin: 0 auto 10px auto;
     }
+    /* สไตล์สำหรับสถานะโหลด */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        flex-direction: column;
+    }
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-left-color: #16a34a;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body class="bg-gray-100">
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p class="mt-4 text-gray-700">กำลังโหลดข้อมูล...</p>
+  </div>
+
   <header class="text-center py-6 bg-green-600 text-white shadow">
     <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Seal_of_Ko_Samui.png" alt="Seal of Ko Samui" class="logo">
     <h1 class="text-2xl font-bold">ระบบติดตามโครงการขนมูลฝอย 2568-2570</h1>
@@ -50,21 +91,41 @@
 
   <div class="max-w-6xl mx-auto p-4">
     <div class="flex justify-center gap-4 mb-6">
-      <button onclick="switchTab('form', event)" class="tab-button px-4 py-2 rounded-lg bg-white shadow">บันทึกข้อมูล</button>
-      <button onclick="switchTab('stats', event); renderStats()" class="tab-button px-4 py-2 rounded-lg bg-white shadow">สถิติ</button>
+      <button id="formTabButton" onclick="switchTab('form', event)" class="tab-button px-4 py-2 rounded-lg bg-white shadow">บันทึกข้อมูล</button>
+      <button id="statsTabButton" onclick="switchTab('stats', event); renderStats()" class="tab-button px-4 py-2 rounded-lg bg-white shadow">สถิติ</button>
     </div>
 
     <div id="form" class="tab-content">
       <div class="bg-white p-6 rounded-2xl shadow">
         <h2 class="text-xl font-semibold mb-4 text-gray-800">บันทึกงวดงาน</h2>
         <form id="recordForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <label>งวดที่ <input type="number" placeholder="งวดที่" id="period" required class="w-full"></label>
-          <label>วันที่ครบงวด <input type="date" id="dueDate" required class="w-full"></label>
-          <label>วันที่ส่งงานจริง <input type="date" id="submitDate" required class="w-full" onchange="calculateDelayAndFine()"></label>
-          <label>จำนวนวันล่าช้า <input type="number" id="delayDays" required class="w-full" oninput="autoCalculateFine()"></label>
-          <label>ค่าปรับ (บาท) <input type="number" id="fine" step="0.01" required class="w-full"></label>
-          <label>ปริมาณขยะ (ตัน) <input type="number" id="waste" step="0.01" required class="w-full"></label>
-          <label>หมายเหตุเพิ่มเติม <input type="text" id="note" class="w-full"></label>
+          <div>
+            <label for="period">งวดที่</label>
+            <input type="number" placeholder="งวดที่" id="period" required class="w-full">
+          </div>
+          <div>
+            <label for="dueDate">วันที่ครบงวด</label>
+            <input type="date" id="dueDate" required class="w-full">
+          </div>
+          <div>
+            <label for="submitDate">วันที่ส่งงานจริง</label>
+            <input type="date" id="submitDate" required class="w-full" onchange="calculateDelayAndFine()">
+          </div>
+          <div>
+            <label for="delayDays">จำนวนวันล่าช้า</label>
+            <input type="number" id="delayDays" required class="w-full" oninput="autoCalculateFine()">
+          </div>
+          <div>
+            <label for="fine">ค่าปรับ (บาท)</label>
+            <input type="number" id="fine" step="0.01" required class="w-full">
+          </div>
+          <div>
+            <label for="waste">ปริมาณขยะ (ตัน)</label>
+            <input type="number" id="waste" step="0.01" required class="w-full">
+          </div>
+          <div class="md:col-span-2"> <label for="note">หมายเหตุเพิ่มเติม</label>
+            <input type="text" id="note" class="w-full">
+          </div>
           <button type="submit" class="col-span-2 text-white py-2 rounded-xl text-lg font-medium">บันทึก</button>
         </form>
       </div>
@@ -76,7 +137,13 @@
         <canvas id="wasteChart" class="mb-6"></canvas>
         <canvas id="netPayChart" class="mb-6"></canvas>
         <canvas id="fineChart" class="mb-6"></canvas>
-        <div id="summary" class="mt-6 text-lg"></div>
+        <div id="summary" class="mt-6 text-lg p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 class="text-xl font-semibold mb-2 text-gray-700">สรุปภาพรวม</h3>
+          <p><strong>ปริมาณขยะรวม:</strong> <span id="totalWasteSummary">0.00</span> ตัน</p>
+          <p><strong>ค่าปรับรวม:</strong> <span id="totalFineSummary">0.00</span> บาท</p>
+          <p><strong>ค่าจ้างสุทธิรวม:</strong> <span id="totalNetPaySummary">0.00</span> บาท</p>
+          <p><strong>งบประมาณคงเหลือ:</strong> <span id="remainingBudgetSummary">0.00</span> บาท</p>
+        </div>
       </div>
     </div>
   </div>
@@ -86,61 +153,105 @@
   </footer>
 
   <script>
-    const finePerDay = 25612.20;
-    const pricePerTon = 1530;
-    const fullBudget = 256122000;
+    // กำหนดค่าคงที่ที่ใช้ในการคำนวณ
+    const finePerDay = 25612.20; // ค่าปรับต่อวัน
+    const pricePerTon = 1530;   // ราคาต่อตัน
+    const fullBudget = 256122000; // งบประมาณทั้งหมด
+    // Endpoint ของ Google Apps Script สำหรับการจัดการข้อมูล
     const endpoint = "https://script.google.com/macros/s/AKfycbwSBBtS6QVE1aLsyKuoVFXE7SJ2xpfcWS23HEe-d_d7GnG-DctZOUDo03XAUWtMXb6E/exec";
 
-    function autoCalculateFine() {
-      const delayDays = parseInt(document.getElementById('delayDays').value) || 0;
-      const fine = delayDays * finePerDay;
-      document.getElementById('fine').value = fine.toFixed(2);
+    // ตัวแปรสำหรับเก็บ instance ของ Chart เพื่อให้สามารถทำลายและสร้างใหม่ได้
+    let wasteChartInstance, netPayChartInstance, fineChartInstance;
+
+    // ฟังก์ชันสำหรับแสดง/ซ่อน overlay โหลด
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.remove('hidden');
     }
 
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+
+    // ฟังก์ชันคำนวณค่าปรับอัตโนมัติจากจำนวนวันล่าช้า
+    function autoCalculateFine() {
+      const delayDaysInput = document.getElementById('delayDays');
+      const fineInput = document.getElementById('fine');
+      const delayDays = parseInt(delayDaysInput.value) || 0; // แปลงค่าเป็นจำนวนเต็ม ถ้าไม่มีค่าให้เป็น 0
+      const fine = delayDays * finePerDay; // คำนวณค่าปรับ
+      fineInput.value = fine.toFixed(2); // แสดงค่าปรับในช่อง input โดยปัดเศษทศนิยม 2 ตำแหน่ง
+    }
+
+    // ฟังก์ชันคำนวณจำนวนวันล่าช้าและค่าปรับจากวันที่ครบงวดและวันที่ส่งงานจริง
     function calculateDelayAndFine() {
-      const dueDate = new Date(document.getElementById('dueDate').value);
-      const submitDate = new Date(document.getElementById('submitDate').value);
+      const dueDateInput = document.getElementById('dueDate');
+      const submitDateInput = document.getElementById('submitDate');
+      const delayDaysInput = document.getElementById('delayDays');
+
+      const dueDate = new Date(dueDateInput.value);
+      const submitDate = new Date(submitDateInput.value);
+
+      // ตรวจสอบว่าวันที่ถูกต้องหรือไม่
       if (!isNaN(dueDate.getTime()) && !isNaN(submitDate.getTime())) {
-        const diffTime = submitDate - dueDate;
+        const diffTime = submitDate - dueDate; // ผลต่างของเวลาเป็นมิลลิวินาที
+        // คำนวณจำนวนวันล่าช้า (ปัดขึ้น) และต้องไม่น้อยกว่า 0
         const delay = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-        document.getElementById('delayDays').value = delay;
-        autoCalculateFine();
+        delayDaysInput.value = delay; // แสดงจำนวนวันล่าช้า
+        autoCalculateFine(); // เรียกคำนวณค่าปรับอัตโนมัติ
+      } else {
+        // หากวันที่ไม่ถูกต้อง ให้เคลียร์ค่า
+        delayDaysInput.value = '';
+        document.getElementById('fine').value = '';
       }
     }
 
+    // เพิ่ม event listener สำหรับฟอร์มการบันทึกข้อมูล
     document.getElementById('recordForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
+      e.preventDefault(); // ป้องกันการรีโหลดหน้าเมื่อ submit ฟอร์ม
+      showLoading(); // แสดงสถานะโหลด
 
       try {
+        // ดึงค่าจากฟอร์มและแปลงประเภทข้อมูล
         const waste = parseFloat(document.getElementById('waste').value);
         const fine = parseFloat(document.getElementById('fine').value);
+        const period = document.getElementById('period').value;
+        const dueDate = document.getElementById('dueDate').value;
+        const submitDate = document.getElementById('submitDate').value;
+        const delayDays = document.getElementById('delayDays').value;
+        const note = document.getElementById('note').value;
+
+        // คำนวณค่าจ้างและค่าจ้างสุทธิ
         const pay = waste * pricePerTon;
         const netPay = pay - fine;
 
+        // ดึงข้อมูลทั้งหมดที่มีอยู่เพื่อคำนวณผลรวม
         const getRes = await fetch(`${endpoint}?action=getRecords`);
         const getResult = await getRes.json();
         const records = getResult.success ? getResult.data : [];
 
+        // คำนวณผลรวมใหม่
         const wasteTotal = records.reduce((sum, r) => sum + (parseFloat(r['ปริมาณขยะ (ตัน)']) || 0), 0) + waste;
         const fineTotal = records.reduce((sum, r) => sum + (parseFloat(r['ค่าปรับ (บาท)']) || 0), 0) + fine;
         const netTotal = records.reduce((sum, r) => sum + (parseFloat(r['ค่าจ้างสุทธิ (บาท)']) || 0), 0) + netPay;
         const remainBudget = fullBudget - netTotal;
 
+        // สร้าง object ข้อมูลที่จะส่งไปยัง Google Apps Script
         const data = {
-          period: document.getElementById('period').value,
-          dueDate: document.getElementById('dueDate').value,
-          submitDate: document.getElementById('submitDate').value,
-          delayDays: document.getElementById('delayDays').value,
+          period: period,
+          dueDate: dueDate,
+          submitDate: submitDate,
+          delayDays: delayDays,
           fine: fine.toFixed(2),
           waste: waste.toFixed(2),
-          note: document.getElementById('note').value,
+          note: note,
           pay: pay.toFixed(2),
           netPay: netPay.toFixed(2),
           wasteTotal: wasteTotal.toFixed(2),
           fineTotal: fineTotal.toFixed(2),
+          netTotal: netTotal.toFixed(2), // เพิ่ม netTotal เข้าไปในข้อมูลที่ส่ง
           remainBudget: remainBudget.toFixed(2)
         };
 
+        // ส่งข้อมูลไปยัง Google Apps Script ด้วย method POST
         const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -148,52 +259,234 @@
         });
         const result = await res.json();
 
+        // ตรวจสอบผลลัพธ์จากการบันทึก
         if (result.success) {
           Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', text: 'ข้อมูลถูกบันทึกเรียบร้อยแล้ว!', confirmButtonColor: '#16a34a' });
-          document.getElementById('recordForm').reset();
+          document.getElementById('recordForm').reset(); // รีเซ็ตฟอร์ม
         } else {
-          throw new Error(result.message || 'บันทึกไม่สำเร็จ');
+          throw new Error(result.message || 'บันทึกไม่สำเร็จ'); // โยนข้อผิดพลาดหากบันทึกไม่สำเร็จ
         }
       } catch (error) {
+        // แสดงข้อความข้อผิดพลาดด้วย SweetAlert2
         Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message, confirmButtonColor: '#dc2626' });
+      } finally {
+        hideLoading(); // ซ่อนสถานะโหลดไม่ว่าจะสำเร็จหรือเกิดข้อผิดพลาด
       }
     });
 
-    function switchTab(tab, event) {
+    // ฟังก์ชันสำหรับสลับแท็บ
+    function switchTab(tabId, event) {
+      // ซ่อนทุกแท็บ
       document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
-      document.getElementById(tab).classList.remove('hidden');
+      // แสดงแท็บที่เลือก
+      document.getElementById(tabId).classList.remove('hidden');
+      // ลบ active class ออกจากทุกปุ่มแท็บ
       document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      // เพิ่ม active class ให้กับปุ่มแท็บที่ถูกคลิก
       event.target.classList.add('active');
     }
 
+    // ฟังก์ชันสำหรับแสดงกราฟและสรุปสถิติ
     async function renderStats() {
+      showLoading(); // แสดงสถานะโหลด
       try {
+        // ดึงข้อมูลจาก Google Apps Script
         const res = await fetch(`${endpoint}?action=getRecords`);
         const json = await res.json();
         const records = json.success ? json.data : [];
-        const labels = records.map((r, i) => `งวด ${r['งวดที่'] || i+1}`);
+
+        // ทำลาย Chart instance เก่าก่อนสร้างใหม่ เพื่อป้องกันการซ้อนทับ
+        if (wasteChartInstance) wasteChartInstance.destroy();
+        if (netPayChartInstance) netPayChartInstance.destroy();
+        if (fineChartInstance) fineChartInstance.destroy();
+
+        // เตรียมข้อมูลสำหรับกราฟ
+        const labels = records.map((r, i) => `งวด ${r['งวดที่'] || i + 1}`);
         const waste = records.map(r => parseFloat(r['ปริมาณขยะ (ตัน)'] || 0));
         const netPay = records.map(r => parseFloat(r['ค่าจ้างสุทธิ (บาท)'] || 0));
         const fines = records.map(r => parseFloat(r['ค่าปรับ (บาท)'] || 0));
 
-        new Chart(document.getElementById('wasteChart'), {
-          type: 'bar', data: { labels, datasets: [{ label: 'ปริมาณขยะ (ตัน)', data: waste, backgroundColor: '#34d399' }] },
-          options: { responsive: true }
+        // สร้างกราฟปริมาณขยะ
+        wasteChartInstance = new Chart(document.getElementById('wasteChart'), {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'ปริมาณขยะ (ตัน)',
+              data: waste,
+              backgroundColor: '#34d399', // สีเขียว
+              borderColor: '#10b981',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'กราฟปริมาณขยะ',
+                font: {
+                  size: 16,
+                  family: 'Prompt'
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'ปริมาณ (ตัน)',
+                  font: {
+                    family: 'Prompt'
+                  }
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'งวดที่',
+                  font: {
+                    family: 'Prompt'
+                  }
+                }
+              }
+            }
+          }
         });
 
-        new Chart(document.getElementById('netPayChart'), {
-          type: 'bar', data: { labels, datasets: [{ label: 'ค่าจ้างสุทธิ (บาท)', data: netPay, backgroundColor: '#4ade80' }] },
-          options: { responsive: true }
+        // สร้างกราฟค่าจ้างสุทธิ
+        netPayChartInstance = new Chart(document.getElementById('netPayChart'), {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'ค่าจ้างสุทธิ (บาท)',
+              data: netPay,
+              backgroundColor: '#4ade80', // สีเขียวอ่อน
+              borderColor: '#22c55e',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'กราฟค่าจ้างสุทธิ',
+                font: {
+                  size: 16,
+                  family: 'Prompt'
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'ค่าจ้าง (บาท)',
+                  font: {
+                    family: 'Prompt'
+                  }
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'งวดที่',
+                  font: {
+                    family: 'Prompt'
+                  }
+                }
+              }
+            }
+          }
         });
 
-        new Chart(document.getElementById('fineChart'), {
-          type: 'bar', data: { labels, datasets: [{ label: 'ค่าปรับ (บาท)', data: fines, backgroundColor: '#f87171' }] },
-          options: { responsive: true }
+        // สร้างกราฟค่าปรับ
+        fineChartInstance = new Chart(document.getElementById('fineChart'), {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'ค่าปรับ (บาท)',
+              data: fines,
+              backgroundColor: '#f87171', // สีแดง
+              borderColor: '#ef4444',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'กราฟค่าปรับ',
+                font: {
+                  size: 16,
+                  family: 'Prompt'
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'ค่าปรับ (บาท)',
+                  font: {
+                    family: 'Prompt'
+                  }
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'งวดที่',
+                  font: {
+                    family: 'Prompt'
+                  }
+                }
+              }
+            }
+          }
         });
+
+        // คำนวณผลรวมทั้งหมดสำหรับส่วนสรุป
+        const totalWaste = waste.reduce((sum, val) => sum + val, 0);
+        const totalFine = fines.reduce((sum, val) => sum + val, 0);
+        const totalNetPay = netPay.reduce((sum, val) => sum + val, 0);
+        const currentRemainingBudget = fullBudget - totalNetPay;
+
+        // แสดงผลรวมในส่วนสรุป
+        document.getElementById('totalWasteSummary').textContent = totalWaste.toFixed(2);
+        document.getElementById('totalFineSummary').textContent = totalFine.toFixed(2);
+        document.getElementById('totalNetPaySummary').textContent = totalNetPay.toFixed(2);
+        document.getElementById('remainingBudgetSummary').textContent = currentRemainingBudget.toFixed(2);
+
       } catch (err) {
         console.error('โหลดข้อมูลไม่สำเร็จ:', err);
+        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถโหลดข้อมูลสถิติได้ กรุณาลองใหม่อีกครั้ง', confirmButtonColor: '#dc2626' });
+      } finally {
+        hideLoading(); // ซ่อนสถานะโหลดไม่ว่าจะสำเร็จหรือเกิดข้อผิดพลาด
       }
     }
+
+    // กำหนดให้แท็บ "บันทึกข้อมูล" เป็นแท็บเริ่มต้นเมื่อโหลดหน้าเว็บ
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('form').classList.remove('hidden');
+      document.getElementById('formTabButton').classList.add('active');
+    });
   </script>
 </body>
 </html>
