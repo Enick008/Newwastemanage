@@ -6,6 +6,7 @@
   <title>ระบบติดตามโครงการขนมูลฝอย</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Prompt&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Prompt', sans-serif; }
@@ -88,6 +89,7 @@
 
   <script>
     const finePerDay = 25612.20;
+    const endpoint = "https://script.google.com/macros/s/AKfycbwSBBtS6QVE1aLsyKuoVFXE7SJ2xpfcWS23HEe-d_d7GnG-DctZOUDo03XAUWtMXb6E/exec";
 
     function autoCalculateFine() {
       const delayDays = parseInt(document.getElementById('delayDays').value) || 0;
@@ -104,6 +106,55 @@
         document.getElementById('delayDays').value = delay;
         autoCalculateFine();
       }
+    }
+
+    document.getElementById('recordForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const data = {
+        period: document.getElementById('period').value,
+        dueDate: document.getElementById('dueDate').value,
+        submitDate: document.getElementById('submitDate').value,
+        delayDays: document.getElementById('delayDays').value,
+        fine: document.getElementById('fine').value,
+        waste: document.getElementById('waste').value,
+        note: document.getElementById('note').value
+      };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'บันทึกสำเร็จ',
+            text: 'ข้อมูลถูกบันทึกเรียบร้อยแล้ว!',
+            confirmButtonColor: '#16a34a'
+          });
+          document.getElementById('recordForm').reset();
+        } else {
+          throw new Error(result.message || 'บันทึกไม่สำเร็จ');
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: error.message,
+          confirmButtonColor: '#dc2626'
+        });
+      }
+    });
+
+    function switchTab(tab, event) {
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
+      document.getElementById(tab).classList.remove('hidden');
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
     }
   </script>
 </body>
