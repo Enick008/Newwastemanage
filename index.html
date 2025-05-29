@@ -60,7 +60,7 @@
         <form id="recordForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label>งวดที่ <input type="number" placeholder="งวดที่" id="period" required class="w-full"></label>
           <label>วันที่ครบงวด <input type="date" placeholder="วันที่ครบงวด" id="dueDate" required class="w-full"></label>
-          <label>วันที่ส่งงานจริง <input type="date" placeholder="วันที่ส่งงานจริง" id="submitDate" required class="w-full"></label>
+          <label>วันที่ส่งงานจริง <input type="date" placeholder="วันที่ส่งงานจริง" id="submitDate" required class="w-full" onchange="calculateDelayAndFine()"></label>
           <label>จำนวนวันล่าช้า <input type="number" placeholder="จำนวนวันล่าช้า" id="delayDays" required class="w-full" oninput="autoCalculateFine()"></label>
           <label>ค่าปรับ (บาท) <input type="number" placeholder="ค่าปรับ (บาท)" id="fine" step="0.01" required class="w-full"></label>
           <label>ปริมาณขยะ (ตัน) <input type="number" placeholder="ปริมาณขยะ (ตัน)" id="waste" step="0.01" required class="w-full"></label>
@@ -85,5 +85,26 @@
   <footer class="text-center bg-green-600 text-white text-sm py-4 mt-8">
     ©2025 ระบบติดตามโครงการ กองช่างสุขาภิบาล โดย นายธีรศักดิ์ พูลเขาล้าน
   </footer>
+
+  <script>
+    const finePerDay = 25612.20;
+
+    function autoCalculateFine() {
+      const delayDays = parseInt(document.getElementById('delayDays').value) || 0;
+      const fine = delayDays * finePerDay;
+      document.getElementById('fine').value = fine.toFixed(2);
+    }
+
+    function calculateDelayAndFine() {
+      const dueDate = new Date(document.getElementById('dueDate').value);
+      const submitDate = new Date(document.getElementById('submitDate').value);
+      if (!isNaN(dueDate.getTime()) && !isNaN(submitDate.getTime())) {
+        const diffTime = submitDate - dueDate;
+        const delay = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        document.getElementById('delayDays').value = delay;
+        autoCalculateFine();
+      }
+    }
+  </script>
 </body>
 </html>
